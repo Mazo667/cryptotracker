@@ -1,6 +1,11 @@
 import 'package:cryptotracker/api_client.dart';
+import 'package:cryptotracker/app_state.dart';
 import 'package:cryptotracker/models.dart';
+import 'package:cryptotracker/widget/coin_item.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
+
 
 class CoinsListScreen extends StatefulWidget {
   const CoinsListScreen({super.key});
@@ -10,7 +15,7 @@ class CoinsListScreen extends StatefulWidget {
 }
 
 class _CoinsListScreenState extends State<CoinsListScreen> {
-  List<String> _defaultCoins = ['bitcoin', 'ethereum', 'dogecoin'];
+  final List<String> _defaultCoins = ['bitcoin', 'ethereum', 'dai'];
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Coin>>(
@@ -26,7 +31,7 @@ class _CoinsListScreenState extends State<CoinsListScreen> {
           return ListView.builder(
               itemCount: coins.length,
               itemBuilder: (context, index) {
-                return CoinItem(
+                return CoinRow(
                   coin: coins[index],
                 );
               });
@@ -36,45 +41,37 @@ class _CoinsListScreenState extends State<CoinsListScreen> {
   }
 }
 
-class CoinItem extends StatelessWidget {
+class CoinRow extends StatelessWidget {
   final Coin coin;
-  CoinItem({super.key, required this.coin});
+  const CoinRow({super.key, required this.coin});
 
-  bool up = true;
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: DefaultTextStyle(
-        style: const TextStyle(
-            fontSize: 20, color: Colors.black54, fontWeight: FontWeight.w400),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Image.network(
-                coin.imageUrl,
-                width: 60,
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [Text(coin.name), Text(coin.symbol)],
-              ),
-              //el spacer ocupa todo el espacio posible
-              Spacer(),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text("\$${coin.priceVsUsd}"),
-                  Text("%${coin.priceChange24Percentaje}",
-                      style: TextStyle(
-                          color: up ? Colors.lightGreen : Colors.redAccent))
-                ],
-              )
-            ],
-          ),
-        ),
+    return Slidable(
+      endActionPane: ActionPane(
+        motion: const ScrollMotion(),
+        extentRatio: 0.3,
+        children: [
+          SlidableAction(
+              onPressed: (context) {
+                onFollowingCoin(context,coin.id);
+              },
+              backgroundColor: Colors.pinkAccent,
+              foregroundColor: Colors.white70,
+              icon: Icons.favorite,
+              label: 'Seguir',
+              borderRadius: BorderRadius.circular(25),
+          )
+        ],
       ),
+        child: CoinItem(coin: coin)
     );
   }
+
+  void onFollowingCoin(BuildContext context, String coinId) async {
+    var appState = Provider.of<AppState>(context, listen: false);
+    appState.add(coinId);
+    }
 }
+
+
